@@ -6,7 +6,7 @@
   import BrowserWidget from "$lib/components/BrowserWidget.svelte";
   import TerminalWidget from "$lib/components/TerminalWidget.svelte";
   import * as Resizable from "$lib/components/ui/resizable/index.js";
-  import { toast } from "svelte-sonner";
+  import FooterToolbar from "$lib/components/FooterToolbar.svelte";
 
   import {
     fetchInitialData,
@@ -55,25 +55,6 @@
       tokenUsage.set(tokens["token_usage"]);
     });
 
-    agentState.subscribe((state) => {
-      function handleMonologueChange(newValue) {
-        if (newValue) {
-          if(newValue == "Writing code..." || newValue == "Agent has completed the task."){
-            toast.success(newValue);
-          }
-          else if(newValue.includes("error")) {
-            toast.error(newValue);
-          } 
-          else {
-            toast.message(newValue);
-          }
-        }
-      }
-      if (state && state.internal_monologue && state.internal_monologue !== prevMonologue) {
-        handleMonologueChange(state.internal_monologue);
-        prevMonologue = state.internal_monologue;
-      }
-    });
   });
 
   onDestroy(() => {
@@ -86,7 +67,7 @@
   });
 </script>
 
-<div class="flex h-full flex-col flex-1 gap-4 p-4 overflow-hidden">
+<div class="flex h-full flex-col flex-1 p-3 overflow-hidden">
   <ControlPanel />
 
   <div class="flex flex-1 max-w-[95vw] overflow-x-auto">
@@ -127,4 +108,5 @@
       </Resizable.Pane>
     </Resizable.PaneGroup>
     </div>
+    <FooterToolbar />
 </div>

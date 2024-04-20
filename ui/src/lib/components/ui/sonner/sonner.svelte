@@ -5,7 +5,7 @@
 
 <Sonner
 	theme={$mode}
-	position="bottom-left"
+	position="bottom-right"
 	class="toaster group"
 	toastOptions={{
 		classes: {

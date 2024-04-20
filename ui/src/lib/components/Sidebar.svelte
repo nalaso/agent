@@ -24,7 +24,7 @@
 </script>
 
 <div
-  class="flex flex-col text-tertiary mx-2 my-4 gap-6 items-center bg-secondary rounded-xl p-6"
+  class="flex flex-col text-tertiary mx-2 my-3 gap-6 items-center bg-secondary rounded-xl p-6"
 >
   {#each navItems as { icon, tooltip, route }, i}
     <SidebarButton
