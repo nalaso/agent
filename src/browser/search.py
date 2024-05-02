@@ -1,5 +1,3 @@
-import threading
-
 import requests
 from src.config import Config
 
@@ -56,9 +54,13 @@ class GoogleSearch:
 
     def get_first_link(self):
         item = ""
-        if 'items' in self.query_result:
-            item = self.query_result['items'][0]['link']
-        return item
+        try:
+            if 'items' in self.query_result:
+                item = self.query_result['items'][0]['link']
+            return item
+        except Exception as error:
+            print(error)
+            return ""
 
 
 # class DuckDuckGoSearch:
@@ -66,7 +68,7 @@ class GoogleSearch:
 #         self.query_result = None
 #
 #     def search(self, query):
-        from duckduckgo_search import DDGS
+        # from duckduckgo_search import DDGS
 #         try:
 #             self.query_result = DDGS().text(query, max_results=5, region="us")
 #             print(self.query_result)
