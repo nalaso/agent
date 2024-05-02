@@ -42,8 +42,8 @@
   <ControlPanel />
 
   <div class="flex flex-1 max-w-[95vw] overflow-x-auto">
-    <Resizable.PaneGroup direction="horizontal" class={"min-w-[140vw] snap-mandatory snap-x"} autoSaveId="default">
-      <Resizable.Pane defaultSize={40} class="snap-center">
+    <Resizable.PaneGroup direction="horizontal" class={"min-w-[140vw]"} autoSaveId="default">
+      <Resizable.Pane defaultSize={40} minSize={10} class="snap-center">
         <div class="flex flex-col gap-2 w-full h-full pr-4">
           <MessageContainer />
           <MessageInput />
@@ -52,9 +52,9 @@
       {#if resizeEnabled}
         <Resizable.Handle />
       {/if}
-      <Resizable.Pane defaultSize={40} class="snap-center">
+      <Resizable.Pane defaultSize={40} minSize={10} class="snap-center">
         <Resizable.PaneGroup direction="vertical">
-          <Resizable.Pane defaultSize={50}>
+          <Resizable.Pane defaultSize={50}  minSize={9.5}>
             <div class="flex h-full items-center justify-center p-2">
               <BrowserWidget />
             </div>
@@ -62,7 +62,7 @@
           {#if resizeEnabled}
             <Resizable.Handle />
           {/if}
-          <Resizable.Pane defaultSize={50}>
+          <Resizable.Pane defaultSize={50}  minSize={8}>
             <div class="flex h-full items-center justify-center p-2">
               <TerminalWidget />
             </div>
@@ -72,7 +72,7 @@
       {#if resizeEnabled }
         <Resizable.Handle />
       {/if}
-      <Resizable.Pane defaultSize={50} class="snap-center">
+      <Resizable.Pane defaultSize={50} minSize={10} class="snap-center">
         <div class="flex flex-col gap-2 w-full h-full pr-4 p-2">
           <EditorWidget />
         </div>
