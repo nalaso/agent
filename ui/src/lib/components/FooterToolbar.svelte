@@ -3,9 +3,11 @@
     import { onMount } from "svelte";
     import Seperator from "./ui/Seperator.svelte";
     import { toast } from "svelte-sonner";
-  
+    import { socket } from "./../api";
+
     let prevMonologue = null;
-  
+    let inference_time = 0;
+
     function handleMonologueChange(value) {
         if(!value) return;
         if(value == "Writing code..." || value == "Agent has completed the task."){
@@ -20,6 +22,11 @@
     }
   
     onMount(() => {
+      socket.on("inference", function (data) {
+        if(data['type'] == 'time') {
+          inference_time = data["elapsed_time"];
+        }
+      });
       prevMonologue = $agentState?.internal_monologue;
     });
   
@@ -59,6 +66,13 @@
           {:else}
             Deactive
           {/if}
+        </p>
+      </div>
+      <Seperator height={14} />
+      <div class="relative px-1.5 rounded-md">
+        <p>
+          Model Inference:
+          <span class="text-orange-300">{inference_time} sec</span>
         </p>
       </div>
     </div>

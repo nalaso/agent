@@ -3,8 +3,10 @@
   import { agentState, messages, isSending } from "$lib/store";
   import { calculateTokens } from "$lib/token";
   import { Icons } from "../icons";
+  import { onMount } from "svelte";
 
   let isAgentActive = false;
+  let inference_time = 0;
 
   if ($agentState !== null) {
     isAgentActive = $agentState.agent_is_active;
@@ -15,6 +17,8 @@
     const projectName = localStorage.getItem("selectedProject");
     const selectedModel = localStorage.getItem("selectedModel");
     const serachEngine = localStorage.getItem("selectedSearchEngine");
+
+    console.log(selectedModel);
 
     if (!projectName) {
       alert("Please select a project first!");
@@ -29,15 +33,6 @@
       $isSending = true;
       if ($messages.length === 0) {
         socket.emit("user-message", { 
-          action: "execute_agent",
-          message: messageInput,
-          base_model: selectedModel,
-          project_name: projectName,
-          search_engine: serachEngine,
-        });
-      } else {
-        socket.emit("user-message", { 
-          action: "continue",
           message: messageInput,
           base_model: selectedModel,
           project_name: projectName,
@@ -53,6 +48,14 @@
     let tokens = calculateTokens(prompt);
     document.querySelector(".token-count").textContent = `${tokens}`;
   }
+
+  onMount(() => {
+    socket.on("inference", function (data) {
+      if(data['type'] == 'time') {
+        inference_time = data["elapsed_time"];
+      }
+    });
+  });
 </script>
 
 <div class="expandable-input relative">
@@ -67,6 +70,7 @@
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         handleSendMessage();
+        document.querySelector('.token-count').textContent = 0;
       }
     }}
   ></textarea>

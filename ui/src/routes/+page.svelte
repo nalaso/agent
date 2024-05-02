@@ -8,65 +8,33 @@
   import * as Resizable from "$lib/components/ui/resizable/index.js";
   import FooterToolbar from "$lib/components/FooterToolbar.svelte";
 
-  import {
-    fetchInitialData,
-    fetchAgentState,
-    checkInternetStatus,
-    socket,
-  } from "$lib/api";
-  import { messages, tokenUsage, agentState, isSending } from "$lib/store";
-    import EditorWidget from "../lib/components/EditorWidget.svelte";
+  import { checkInternetStatus, checkServerStatus, socket} from "$lib/api";
+  import { initializeSockets, destroySockets } from "$lib/sockets";
+  import { serverStatus } from "$lib/store";
+  import EditorWidget from "../lib/components/EditorWidget.svelte";
 
   let resizeEnabled =
     localStorage.getItem("resize") &&
     localStorage.getItem("resize") === "enable";
-  let prevMonologue = null;
   
   onMount(() => {
-    // localStorage.clear();
     const load = async () => {
-      await fetchInitialData();
-
-      await fetchAgentState();
-      // await fetchMessages();
       await checkInternetStatus();
+      if(!await checkServerStatus()) {
+        toast.error("Failed to connect to server");
+        return;
+      }
+
+      serverStatus.set(true);
+      console.log("Server is online");
+      await initializeSockets(socket);
+      console.log("Sockets initialized");
     };
     load();
-
-    prevMonologue = $agentState?.internal_monologue;
-
-    socket.emit("socket_connect", { data: "frontend connected!" });
-    socket.on("socket_response", function (msg) {
-      console.log(msg);
-    });
-
-    socket.on("server-message", function (data) {
-      console.log("server-message: ", data);
-      messages.update((msgs) => [...msgs, data["messages"]]);
-    });
-
-    socket.on("agent-state", function (state) {
-      const lastState = state[state.length - 1];
-      agentState.set(lastState);
-      if (lastState.completed) {
-        isSending.set(false);
-      }
-      console.log("server-state: ", lastState);
-    });
-
-    socket.on("tokens", function (tokens) {
-      tokenUsage.set(tokens["token_usage"]);
-    });
-
   });
 
   onDestroy(() => {
-    if (socket.connected) {
-      socket.off("socket_response");
-      socket.off("server-message");
-      socket.off("agent-state");
-      socket.off("tokens");
-    }
+    destroySockets(socket)
   });
 </script>
 
