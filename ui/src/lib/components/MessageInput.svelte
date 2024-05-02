@@ -1,8 +1,14 @@
 <script>
-  import { isSending } from "$lib/store";
+  import { agentState, isSending } from "$lib/store";
   import { calculateTokens } from "$lib/token";
   import { Icons } from "../icons";
   import { emitMessage, socketListener } from "$lib/sockets";
+
+  agentState.subscribe((value) => {
+    if (value !== null && value.agent_is_active == false) {
+      isSending.set(false);
+    }
+  });
 
   let messageInput = "";
   async function handleSendMessage() {
