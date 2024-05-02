@@ -5,6 +5,7 @@ from jinja2 import Environment, BaseLoader
 from typing import List, Dict, Union
 from src.socket_instance import emit_agent
 
+from src.services.utils import retry_wrapper
 from src.config import Config
 from src.llm import LLM
 from src.state import AgentState
@@ -108,6 +109,7 @@ class Patcher:
             "from": "patcher"
         })
 
+    @retry_wrapper
     def execute(
         self,
         conversation: str,
@@ -128,16 +130,8 @@ class Patcher:
         
         valid_response = self.validate_response(response)
         
-        while not valid_response:
-            print("Invalid response from the model, trying again...")
-            return self.execute(
-                conversation,
-                code_markdown,
-                commands,
-                error,
-                system_os,
-                project_name
-            )
+        if not valid_response:
+            return False
         
         self.emulate_code_writing(valid_response, project_name)
 

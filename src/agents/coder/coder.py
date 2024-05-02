@@ -4,6 +4,7 @@ import time
 from jinja2 import Environment, BaseLoader
 from typing import List, Dict, Union
 
+from src.services.utils import retry_wrapper
 from src.config import Config
 from src.llm import LLM
 from src.state import AgentState
@@ -110,6 +111,7 @@ class Coder:
             "from": "coder"
         })
 
+    @retry_wrapper
     def execute(
         self,
         step_by_step_plan: str,
@@ -122,9 +124,8 @@ class Coder:
         
         valid_response = self.validate_response(response)
         
-        while not valid_response:
-            print("Invalid response from the model, trying again...")
-            return self.execute(step_by_step_plan, user_context, search_results, project_name)
+        if not valid_response:
+            return False
         
         print(valid_response)
         
