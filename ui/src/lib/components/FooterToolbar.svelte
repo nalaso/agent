@@ -1,5 +1,5 @@
 <script>
-    import { agentState } from "$lib/store";
+    import { agentState, isSending } from "$lib/store";
     import { onMount } from "svelte";
     import Seperator from "./ui/Seperator.svelte";
     import { toast } from "svelte-sonner";
@@ -7,6 +7,15 @@
 
     let prevMonologue = null;
     let inference_time = 0;
+
+    agentState.subscribe((value) => {
+      if (value !== null && value.agent_is_active == false) {
+        isSending.set(false);
+      }
+      if (value == null){
+        inference_time = 0;
+      }
+    });
 
     function handleMonologueChange(value) {
         if(!value) return;

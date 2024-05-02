@@ -4,12 +4,6 @@
   import { Icons } from "../icons";
   import { emitMessage, socketListener } from "$lib/sockets";
 
-  agentState.subscribe((value) => {
-    if (value !== null && value.agent_is_active == false) {
-      isSending.set(false);
-    }
-  });
-
   let messageInput = "";
   async function handleSendMessage() {
     const projectName = localStorage.getItem("selectedProject");

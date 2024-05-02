@@ -7,14 +7,15 @@
   function selectProject(project) {
     $selectedProject = project;
     fetchMessages();
-    // TODO: fetchAgentState();
-    // fetchAgentState();
+    fetchAgentState();
     document.getElementById("project-dropdown").classList.add("hidden");
   }
+
   function selectModel(model) {
     $selectedModel = model;
     document.getElementById("model-dropdown").classList.add("hidden");
   }
+
   function selectSearchEngine(searchEngine) {
     $selectedSearchEngine = searchEngine;
     document.getElementById("search-engine-dropdown").classList.add("hidden");
@@ -26,8 +27,12 @@
       await createProject(projectName);
       selectProject(projectName);
       tokenUsage.set(0);
+      messages.set([]);
+      agentState.set(null);
+      isSending.set(false);
     }
   }
+
   async function deleteproject(project) {
     if (confirm(`Are you sure you want to delete ${project}?`)) {
       await deleteProject(project);
@@ -35,7 +40,6 @@
       messages.set([]);
       agentState.set(null);
       tokenUsage.set(0);
-      agentState.set(null);
       isSending.set(false);
       $selectedProject = "Select Project";
       localStorage.setItem("selectedProject", "");
@@ -47,6 +51,7 @@
     { dropdown: "model-dropdown", button: "model-button" },
     { dropdown: "search-engine-dropdown", button: "search-engine-button" },
   ];
+
   function closeDropdowns(event) {
     dropdowns.forEach(({ dropdown, button }) => {
       const dropdownElement = document.getElementById(dropdown);
@@ -62,6 +67,7 @@
       }
     });
   }
+
   onMount(() => {
     (async () => {
       if(serverStatus){
@@ -75,6 +81,7 @@
         dropdownElement.classList.toggle("hidden");
       });
     });
+    
     document.addEventListener("click", closeDropdowns);
     return () => {
       document.removeEventListener("click", closeDropdowns);

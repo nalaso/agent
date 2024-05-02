@@ -10,7 +10,7 @@ class OpenAi:
         base_url = config.get_openai_api_base_url()
         self.client = OpenAI(api_key=api_key, base_url=base_url)
 
-    def inference(self, model_id: str, prompt: str) -> str:
+    def inference(self, model_id: str, temperature: int, prompt: str) -> str:
         chat_completion = self.client.chat.completions.create(
             messages=[
                 {
@@ -19,5 +19,6 @@ class OpenAi:
                 }
             ],
             model=model_id,
+            temperature=temperature
         )
         return chat_completion.choices[0].message.content
