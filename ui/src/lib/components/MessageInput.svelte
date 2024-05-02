@@ -1,6 +1,6 @@
 <script>
   import { socket } from "$lib/api";
-  import { agentState, messages } from "$lib/store";
+  import { agentState, messages, isSending } from "$lib/store";
   import { calculateTokens } from "$lib/token";
   import { Icons } from "../icons";
 
@@ -26,6 +26,7 @@
     }
 
     if (messageInput.trim() !== "" && !isAgentActive) {
+      $isSending = true;
       if ($messages.length === 0) {
         socket.emit("user-message", { 
           action: "execute_agent",
@@ -57,8 +58,9 @@
 <div class="expandable-input relative">
   <textarea
     id="message-input"
-    class="w-full p-4 font-medium focus:text-foreground rounded-xl outline-none h-28 pr-20 bg-secondary"
+    class="w-full p-4 font-medium focus:text-foreground rounded-xl outline-none h-28 pr-20 bg-secondary {$isSending ? 'cursor-not-allowed' : ''}"
     placeholder="Type your message..."
+    disabled={$isSending}
     bind:value={messageInput}
     on:input={setTokenSize}
     on:keydown={(e) => {
@@ -71,8 +73,8 @@
 
   <button 
     on:click={handleSendMessage}
-    disabled={isAgentActive}
-    class="absolute text-secondary bg-primary p-2 right-4 bottom-6 rounded-full"
+    disabled={$isSending}
+    class="absolute text-secondary bg-primary p-2 right-4 bottom-6 rounded-full {$isSending ? 'cursor-not-allowed' : ''}"
   >
   {@html Icons.CornerDownLeft} 
   </button>

@@ -14,7 +14,7 @@
     checkInternetStatus,
     socket,
   } from "$lib/api";
-  import { messages, tokenUsage, agentState } from "$lib/store";
+  import { messages, tokenUsage, agentState, isSending } from "$lib/store";
     import EditorWidget from "../lib/components/EditorWidget.svelte";
 
   let resizeEnabled =
@@ -48,6 +48,9 @@
     socket.on("agent-state", function (state) {
       const lastState = state[state.length - 1];
       agentState.set(lastState);
+      if (lastState.completed) {
+        isSending.set(false);
+      }
       console.log("server-state: ", lastState);
     });
 
