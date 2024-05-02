@@ -8,7 +8,7 @@
   import * as Resizable from "$lib/components/ui/resizable/index.js";
   import FooterToolbar from "$lib/components/FooterToolbar.svelte";
 
-  import { checkInternetStatus, checkServerStatus, socket} from "$lib/api";
+  import { checkInternetStatus, checkServerStatus } from "$lib/api";
   import { initializeSockets, destroySockets } from "$lib/sockets";
   import { serverStatus } from "$lib/store";
   import EditorWidget from "../lib/components/EditorWidget.svelte";
@@ -27,14 +27,14 @@
 
       serverStatus.set(true);
       console.log("Server is online");
-      await initializeSockets(socket);
+      await initializeSockets();
       console.log("Sockets initialized");
     };
     load();
   });
 
   onDestroy(() => {
-    destroySockets(socket)
+    destroySockets()
   });
 </script>
 

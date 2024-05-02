@@ -1,8 +1,9 @@
 <script>
   import { agentState } from "$lib/store";
-  import { API_BASE_URL, socket } from "$lib/api";
+  import { API_BASE_URL } from "$lib/api";
+  import { socketListener } from "$lib/sockets";
 
-  socket.on('screenshot', function(msg) {
+  socketListener('screenshot', function(msg) {
     const data = msg['data'];
     const img = document.querySelector('.browser-img');
     img.src = `data:image/png;base64,${data}`;

@@ -3,7 +3,7 @@
     import { onMount } from "svelte";
     import Seperator from "./ui/Seperator.svelte";
     import { toast } from "svelte-sonner";
-    import { socket } from "./../api";
+    import { socketListener } from "$lib/sockets";
 
     let prevMonologue = null;
     let inference_time = 0;
@@ -22,7 +22,7 @@
     }
   
     onMount(() => {
-      socket.on("inference", function (data) {
+      socketListener("inference", function (data) {
         if(data['type'] == 'time') {
           inference_time = data["elapsed_time"];
         }

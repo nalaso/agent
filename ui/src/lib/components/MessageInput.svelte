@@ -1,24 +1,14 @@
 <script>
-  import { socket } from "$lib/api";
-  import { agentState, messages, isSending } from "$lib/store";
+  import { isSending } from "$lib/store";
   import { calculateTokens } from "$lib/token";
   import { Icons } from "../icons";
-  import { onMount } from "svelte";
-
-  let isAgentActive = false;
-  let inference_time = 0;
-
-  if ($agentState !== null) {
-    isAgentActive = $agentState.agent_is_active;
-  }
+  import { emitMessage, socketListener } from "$lib/sockets";
 
   let messageInput = "";
   async function handleSendMessage() {
     const projectName = localStorage.getItem("selectedProject");
     const selectedModel = localStorage.getItem("selectedModel");
     const serachEngine = localStorage.getItem("selectedSearchEngine");
-
-    console.log(selectedModel);
 
     if (!projectName) {
       alert("Please select a project first!");
@@ -29,16 +19,14 @@
       return;
     }
 
-    if (messageInput.trim() !== "" && !isAgentActive) {
+    if (messageInput.trim() !== "" && isSending) {
       $isSending = true;
-      if ($messages.length === 0) {
-        socket.emit("user-message", { 
-          message: messageInput,
-          base_model: selectedModel,
-          project_name: projectName,
-          search_engine: serachEngine,
-        });
-      }
+      emitMessage("user-message", { 
+        message: messageInput,
+        base_model: selectedModel,
+        project_name: projectName,
+        search_engine: serachEngine,
+      });
       messageInput = "";
     }
   }
@@ -48,14 +36,6 @@
     let tokens = calculateTokens(prompt);
     document.querySelector(".token-count").textContent = `${tokens}`;
   }
-
-  onMount(() => {
-    socket.on("inference", function (data) {
-      if(data['type'] == 'time') {
-        inference_time = data["elapsed_time"];
-      }
-    });
-  });
 </script>
 
 <div class="expandable-input relative">

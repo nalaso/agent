@@ -1,6 +1,7 @@
 import { messages, tokenUsage, agentState, isSending } from "$lib/store";
+import { socket } from "$lib/api";
 
-export function initializeSockets(socket) {
+export function initializeSockets() {
 
   socket.connect();
   socket.emit("socket_connect", { data: "frontend connected!" });
@@ -29,6 +30,7 @@ export function initializeSockets(socket) {
   socket.on("inference", function (error) {
     if (error["type"] == "error") {
       toast.error(error["message"]);
+      isSending.set(false);
     } else if (error["type"] == "warning") {
       toast.warning(error["message"]);
     }
@@ -37,6 +39,7 @@ export function initializeSockets(socket) {
   socket.on("info", function (info) {
     if (info["type"] == "error") {
       toast.error(info["message"]);
+      isSending.set(false);
     } else if (info["type"] == "warning") {
       toast.warning(info["message"]);
     } else if (info["type"] == "info") {
@@ -45,7 +48,7 @@ export function initializeSockets(socket) {
   });
 }
 
-export function destroySockets(socket) {
+export function destroySockets() {
   if (socket.connected) {
     socket.off("socket_response");
     socket.off("server-message");

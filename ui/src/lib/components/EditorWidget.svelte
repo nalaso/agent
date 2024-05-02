@@ -1,8 +1,8 @@
 <script>
     import { onDestroy, onMount } from 'svelte';
     import { initializeMonaco, createEditors, disposeEditors, enableTabSwitching } from './MonacoEditor';
-    import { socket, fetchProjectFiles } from "$lib/api";
-    import { storeSelectedProject } from "$lib/store";
+    import { fetchProjectFiles } from "$lib/api";
+    import { socketListener } from "$lib/sockets";
 
     let monaco;
     let editors = {};
@@ -46,7 +46,7 @@
 
     onMount(async () => {
         await initializeEditor()
-        socket.on('code', async function (data) {
+        socketListener('code', async function (data) {
           if(data.from === 'coder'){
             reCreateEditor(data.files);
           }else{
@@ -57,12 +57,6 @@
 
     onDestroy(() => {
         disposeEditors(editors);
-    });
-
-    storeSelectedProject.subscribe((value) => {
-        if (value) {
-            initializeEditor()
-        }
     });
 </script>
 
