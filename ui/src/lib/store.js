@@ -17,6 +17,7 @@ function subscribeAndStore(store, key, defaultValue) {
 }
 
 export const messages = writable([]);
+export const projectFiles = writable(null);
 
 export const selectedProject = writable('');
 export const selectedModel = writable('');

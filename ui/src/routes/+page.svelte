@@ -20,7 +20,7 @@
   onMount(() => {
     const load = async () => {
       await checkInternetStatus();
-      if(!await checkServerStatus()) {
+      if(!(await checkServerStatus())) {
         toast.error("Failed to connect to server");
         return;
       }
@@ -42,8 +42,8 @@
   <ControlPanel />
 
   <div class="flex flex-1 max-w-[95vw] overflow-x-auto">
-    <Resizable.PaneGroup direction="horizontal" class={"min-w-[140vw]"} autoSaveId="default">
-      <Resizable.Pane defaultSize={40} minSize={10} class="snap-center">
+    <Resizable.PaneGroup direction="horizontal" class={"min-w-[170vw]"} autoSaveId="default">
+      <Resizable.Pane defaultSize={25} minSize={10}>
         <div class="flex flex-col gap-2 w-full h-full pr-4">
           <MessageContainer />
           <MessageInput />
@@ -52,7 +52,7 @@
       {#if resizeEnabled}
         <Resizable.Handle />
       {/if}
-      <Resizable.Pane defaultSize={40} minSize={10} class="snap-center">
+      <Resizable.Pane defaultSize={25} minSize={10}>
         <Resizable.PaneGroup direction="vertical">
           <Resizable.Pane defaultSize={50}  minSize={9.5}>
             <div class="flex h-full items-center justify-center p-2">
@@ -72,7 +72,7 @@
       {#if resizeEnabled }
         <Resizable.Handle />
       {/if}
-      <Resizable.Pane defaultSize={50} minSize={10} class="snap-center">
+      <Resizable.Pane defaultSize={50} minSize={10}>
         <div class="flex flex-col gap-2 w-full h-full pr-4 p-2">
           <EditorWidget />
         </div>

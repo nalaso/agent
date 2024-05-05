@@ -4,7 +4,7 @@ import {
   modelList,
   projectList,
   messages,
-  searchEngineList,
+  searchEngineList
 } from "./store";
 import { io } from "socket.io-client";
 
