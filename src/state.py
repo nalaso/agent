@@ -26,7 +26,7 @@ class AgentState:
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         return {
-            "internal_monologue": None,
+            "internal_monologue": '',
             "browser_session": {
                 "url": None,
                 "screenshot": None
@@ -36,19 +36,30 @@ class AgentState:
                 "output": None,
                 "title": None
             },
-            "step": None,
+            "step": int(),
             "message": None,
             "completed": False,
             "agent_is_active": True,
             "token_usage": 0,
             "timestamp": timestamp
         }
+    
+    def create_state(self, project: str):
+        with Session(self.engine) as session:
+            new_state = self.new_state()
+            new_state["step"] = 1
+            new_state["internal_monologue"] = "I'm starting the work..."
+            agent_state = AgentStateModel(project=project, state_stack_json=json.dumps([new_state]))
+            session.add(agent_state)
+            session.commit()
+            emit_agent("agent-state", [new_state])
 
     def delete_state(self, project: str):
         with Session(self.engine) as session:
-            agent_state = session.query(AgentStateModel).filter(AgentStateModel.project == project).first()
+            agent_state = session.query(AgentStateModel).filter(AgentStateModel.project == project).all()
             if agent_state:
-                session.delete(agent_state)
+                for state in agent_state:
+                    session.delete(state)
                 session.commit()
 
     def add_to_current_state(self, project: str, state: dict):
@@ -167,18 +178,22 @@ class AgentState:
     def get_project_files(self, project_name: str):
         if not project_name:
             return []
-        directory = os.path.join(os.getcwd(), 'data', 'projects', "-".join(project_name.split(" "))) 
+        project_directory = "-".join(project_name.split(" "))
+        directory = os.path.join(os.getcwd(), 'data', 'projects', project_directory) 
         if(not os.path.exists(directory)):
             return []
         files = []
         for root, _, filenames in os.walk(directory):
             for filename in filenames:
-                file_path = os.path.join(root, filename)
+                file_relative_path = os.path.relpath(root, directory)
+                if file_relative_path == '.': file_relative_path = ''
+                file_path = os.path.join(file_relative_path, filename)
+                print("file_path",file_path)
                 try:
-                    with open(file_path, 'r') as file:
+                    with open(os.path.join(root, filename), 'r') as file:
                         print("File:", filename)
                         files.append({
-                            "file": filename,
+                            "file": file_path,
                             "code": file.read()
                         })
                 except Exception as e:

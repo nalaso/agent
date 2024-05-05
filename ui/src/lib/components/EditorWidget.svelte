@@ -1,68 +1,73 @@
 <script>
     import { onDestroy, onMount } from 'svelte';
-    import { initializeMonaco, createEditors, disposeEditors, enableTabSwitching } from './MonacoEditor';
-    import { socket, fetchProjectFiles } from "$lib/api";
-    import { storeSelectedProject } from "$lib/store";
+    import { initializeMonaco, initializeEditorRef, createModel, disposeEditor, enableTabSwitching, sidebar } from './MonacoEditor';
+    import { socketListener } from "$lib/sockets";
+    import { projectFiles } from "$lib/store";
 
     let monaco;
-    let editors = {};
+    let models = {};
+    let editor = null;
     let editorContainer;
     let tabContainer;
+    let sidebarContainer;
 
     const reCreateEditor = async (files) => {
-        disposeEditors(editors);
-        editors = {};
+        disposeEditor(editor);
+        models = {};
+        editor = await initializeEditorRef(monaco, editorContainer)
         files.forEach((file) => {
-            let editor = createEditors(editorContainer, monaco, file);
-            editors = {
-                ...editors,
-                [file.file]: editor
+            let model = createModel(monaco, file);
+            editor.setModel(model);
+            models = {
+                ...models,
+                [file.file]: model
             };
         });
-        enableTabSwitching(editors, tabContainer);
+        enableTabSwitching(editor, models, tabContainer);
+        sidebar(editor, models, sidebarContainer);
     };
 
     const patchOrFeature = (files) => {
         files.forEach((file, index) => {
-            const editor = editors[file.file];
-            if (editor) {
-                editor.setValue(file.code);
+            const model = models[file.file];
+            if (model) {
+                model.setValue(file.code);
             }else {
-              let editor = createEditors(editorContainer, monaco, file);
-                editors = {
-                  ...editors,
-                  [file.file]: editor
+              let model = createModel(monaco, file);
+                models = {
+                  ...models,
+                  [file.file]: model
               };
             }
         });
-        enableTabSwitching(editors, tabContainer);
+        enableTabSwitching(editor, models, tabContainer);
+        sidebar(editor, models, sidebarContainer);
     };
 
     const initializeEditor = async () => {
         monaco = await initializeMonaco();
-        const files = await fetchProjectFiles();
-        reCreateEditor(files)
     };
 
     onMount(async () => {
         await initializeEditor()
-        socket.on('code', async function (data) {
+        socketListener('code', async function (data) {
           if(data.from === 'coder'){
             reCreateEditor(data.files);
           }else{
             patchOrFeature(data.files)
           }
         });
+
+        projectFiles.subscribe((files) => {
+          if (files){
+            reCreateEditor(files);
+          }
+        });
     });
 
     onDestroy(() => {
-        disposeEditors(editors);
-    });
-
-    storeSelectedProject.subscribe((value) => {
-        if (value) {
-            initializeEditor()
-        }
+        disposeEditor(editor);
+        models = {};
     });
 </script>
 
@@ -76,12 +81,13 @@
       <div class="w-3 h-3 rounded-full bg-terminal-window-dots"></div>
       <div class="w-3 h-3 rounded-full bg-terminal-window-dots"></div>
     </div>
-      <div class="flex text-tertiary text-sm" bind:this={tabContainer} />
-      {#if Object.keys(editors).length == 0}
+      <div id="tabContainer" class="flex text-tertiary text-sm overflow-x-auto" bind:this={tabContainer} />
+      {#if Object.keys(models).length == 0}
         <div class="flex items-center text-tertiary text-sm">Code viewer</div>
       {/if}
   </div>
-  <div
-    class="h-full rounded-bl-lg bg-terminal-window-background p-0" bind:this={editorContainer}
-  ></div>
+  <div class="h-full w-full flex">
+    <div class="min-w-[260px] overflow-y-auto bg-secondary h-full text-foreground text-sm flex flex-col pt-2" bind:this={sidebarContainer} />
+    <div class="h-full w-full rounded-bl-lg bg-terminal-window-background p-0" bind:this={editorContainer} />
+  </div>
 </div>

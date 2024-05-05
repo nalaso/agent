@@ -10,7 +10,7 @@ class Claude:
             api_key=api_key,
         )
 
-    def inference(self, model_id: str, prompt: str) -> str:
+    def inference(self, model_id: str, temperature: int, prompt: str) -> str:
         message = self.client.messages.create(
             max_tokens=4096,
             messages=[
@@ -20,6 +20,7 @@ class Claude:
                 }
             ],
             model=model_id,
+            temperature=temperature
         )
 
         return message.content[0].text

@@ -9,7 +9,7 @@ class Groq:
         api_key = config.get_groq_api_key()
         self.client = _Groq(api_key=api_key)
 
-    def inference(self, model_id: str, prompt: str) -> str:
+    def inference(self, model_id: str, temperature: int, prompt: str) -> str:
         chat_completion = self.client.chat.completions.create(
             messages=[
                 {
@@ -18,6 +18,7 @@ class Groq:
                 }
             ],
             model=model_id,
+            temperature=temperature
         )
 
         return chat_completion.choices[0].message.content

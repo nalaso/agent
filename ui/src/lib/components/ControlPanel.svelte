@@ -1,44 +1,24 @@
 <script>
   import { onMount } from "svelte";
-  import { projectList, modelList, internet, tokenUsage, agentState, messages, searchEngineList, storeSelectedProject} from "$lib/store";
-  import { createProject, fetchMessages, fetchInitialData, deleteProject, fetchAgentState} from "$lib/api";
-  import { get } from "svelte/store";
+  import { projectList, modelList, internet, tokenUsage, agentState, projectFiles, messages, searchEngineList, serverStatus, isSending, selectedProject, selectedModel, selectedSearchEngine} from "$lib/store";
+  import { createProject, fetchMessages, fetchInitialData, deleteProject, fetchProjectFiles, fetchAgentState} from "$lib/api";
   import Seperator from "./ui/Seperator.svelte";
 
-  let selectedProject;
-  let selectedModel;
-  let selectedSearchEngine;
-
-  const checkListAndSetItem = (list, itemKey, defaultItem) => {
-    if (get(list) && get(list).length > 0) {
-      const item = localStorage.getItem(itemKey);
-      return item ? item : defaultItem;
-    } else {
-      localStorage.setItem(itemKey, "");
-      return defaultItem;
-    }
-  };
-
-  selectedProject = checkListAndSetItem( projectList, "selectedProject", "Select Project");
-  selectedModel = checkListAndSetItem( modelList, "selectedModel", "Select Model");
-  selectedSearchEngine = checkListAndSetItem( searchEngineList, "selectedSearchEngine", "Select Search Engine");
-
   function selectProject(project) {
-    selectedProject = project;
-    localStorage.setItem("selectedProject", project);
-    storeSelectedProject.set(project);
+    $selectedProject = project;
     fetchMessages();
     fetchAgentState();
+    projectFiles.set(fetchProjectFiles());
     document.getElementById("project-dropdown").classList.add("hidden");
   }
+
   function selectModel(model) {
-    selectedModel = `${model[0]}`;
-    localStorage.setItem("selectedModel", model[1]);
+    $selectedModel = model;
     document.getElementById("model-dropdown").classList.add("hidden");
   }
+
   function selectSearchEngine(searchEngine) {
-    selectedSearchEngine = searchEngine;
-    localStorage.setItem("selectedSearchEngine", searchEngine);
+    $selectedSearchEngine = searchEngine;
     document.getElementById("search-engine-dropdown").classList.add("hidden");
   }
 
@@ -47,8 +27,13 @@
     if (projectName) {
       await createProject(projectName);
       selectProject(projectName);
+      tokenUsage.set(0);
+      messages.set([]);
+      agentState.set(null);
+      isSending.set(false);
     }
   }
+
   async function deleteproject(project) {
     if (confirm(`Are you sure you want to delete ${project}?`)) {
       await deleteProject(project);
@@ -56,7 +41,8 @@
       messages.set([]);
       agentState.set(null);
       tokenUsage.set(0);
-      selectedProject = "Select Project";
+      isSending.set(false);
+      $selectedProject = "Select Project";
       localStorage.setItem("selectedProject", "");
     }
   }
@@ -66,6 +52,7 @@
     { dropdown: "model-dropdown", button: "model-button" },
     { dropdown: "search-engine-dropdown", button: "search-engine-button" },
   ];
+
   function closeDropdowns(event) {
     dropdowns.forEach(({ dropdown, button }) => {
       const dropdownElement = document.getElementById(dropdown);
@@ -81,13 +68,21 @@
       }
     });
   }
+
   onMount(() => {
+    (async () => {
+      if(serverStatus){
+        await fetchInitialData();
+      }
+    })();
+
     dropdowns.forEach(({ dropdown, button }) => {
       document.getElementById(button).addEventListener("click", function () {
         const dropdownElement = document.getElementById(dropdown);
         dropdownElement.classList.toggle("hidden");
       });
     });
+    
     document.addEventListener("click", closeDropdowns);
     return () => {
       document.removeEventListener("click", closeDropdowns);
@@ -105,7 +100,7 @@
       aria-expanded="true"
       aria-haspopup="true"
     >
-      <span id="selected-project">{selectedProject}</span>
+      <span id="selected-project">{$selectedProject}</span>
       <i class="fas fa-angle-down text-tertiary"></i>
     </button>
     <div
@@ -171,7 +166,7 @@
           aria-expanded="true"
           aria-haspopup="true"
         >
-          <span id="selected-search-engine">{selectedSearchEngine}</span>
+          <span id="selected-search-engine">{$selectedSearchEngine}</span>
           <i class="fas fa-angle-down text-tertiary"></i>
         </button>
       </div>
@@ -212,7 +207,7 @@
           aria-expanded="true"
           aria-haspopup="true"
         >
-          <span id="selected-model">{selectedModel}</span>
+          <span id="selected-model">{$selectedModel}</span>
           <i class="fas fa-angle-down text-tertiary"></i>
         </button>
       </div>
@@ -235,13 +230,9 @@
                 <div class="flex flex-col gap-[1px] px-6 w-full">
                   {#each modelItems as models}
                     <button
-                      class="relative nav-button flex text-start text-sm text-clip hover:bg-black/20 px-2 py-1.5 rounded-md
-                      transition-colors {selectedModel ==
-                        `${models[0]} (${models[1]})` ||
-                      selectedModel == models[1]
-                        ? 'bg-gray-300'
-                        : ''}"
-                      on:click|preventDefault={() => selectModel(models)}
+                      class="relative nav-button flex text-start text-sm text-clip hover:bg-black/20 px-2 py-1.5 rounded-md transition-colors 
+                      {selectedModel == models[0] ? 'bg-gray-300': ''}"
+                      on:click|preventDefault={() => selectModel(models[0])}
                     >
                       {models[0]}
                       <span class="tooltip text-[10px] px-2 text-gray-500"

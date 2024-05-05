@@ -7,6 +7,7 @@ from jinja2 import Environment, BaseLoader
 
 from src.agents.patcher import Patcher
 
+from src.services.utils import retry_wrapper, validate_responses
 from src.llm import LLM
 from src.state import AgentState
 from src.project import ProjectManager
@@ -50,43 +51,21 @@ class Runner:
             commands=commands,
             error=error
         )
-
+    @validate_responses
     def validate_response(self, response: str):
-        response = response.strip().replace("```json", "```")
-        
-        if response.startswith("```") and response.endswith("```"):
-            response = response[3:-3].strip()
- 
-        try:
-            response = json.loads(response)
-        except Exception as _:
-            return False
-
         if "commands" not in response:
             return False
         else:
             return response["commands"]
         
+    @validate_responses
     def validate_rerunner_response(self, response: str):
-        response = response.strip().replace("```json", "```")
-        
-        if response.startswith("```") and response.endswith("```"):
-            response = response[3:-3].strip()
- 
-        print(response)
- 
-        try:
-            response = json.loads(response)
-        except Exception as _:
-            return False
-        
-        print(response)
-
         if "action" not in response and "response" not in response:
             return False
         else:
             return response
 
+    @retry_wrapper
     def run_code(
         self,
         commands: list,
@@ -140,16 +119,8 @@ class Runner:
                 
                 valid_response = self.validate_rerunner_response(response)
                 
-                while not valid_response:
-                    print("Invalid response from the model, trying again...")
-                    return self.run_code(
-                        commands,
-                        project_path,
-                        project_name,
-                        conversation,
-                        code_markdown,
-                        system_os
-                    )
+                if not valid_response:
+                    return False
                 
                 action = valid_response["action"]
                 
@@ -223,7 +194,8 @@ class Runner:
                         retries += 1
                     else:
                         break
-
+    
+    @retry_wrapper
     def execute(
         self,
         conversation: list,
@@ -236,13 +208,6 @@ class Runner:
         response = self.llm.inference(prompt, project_name)
         
         valid_response = self.validate_response(response)
-        
-        while not valid_response:
-            print("Invalid response from the model, trying again...")
-            return self.execute(conversation, code_markdown, os_system, project_path, project_name)
-        
-        print("=====" * 10)
-        print(valid_response)
         
         self.run_code(
             valid_response,

@@ -10,12 +10,12 @@ class MistralAi:
         api_key = config.get_mistral_api_key()
         self.client = MistralClient(api_key=api_key)
 
-    def inference(self, model_id: str, prompt: str) -> str:
-        print("prompt", prompt.strip())
+    def inference(self, model_id: str, temperature: int, prompt: str) -> str:
         chat_completion = self.client.chat(
             model=model_id,
             messages=[
                 ChatMessage(role="user", content=prompt.strip())
-            ]
+            ],
+            temperature=temperature
         )
         return chat_completion.choices[0].message.content

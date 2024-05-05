@@ -82,6 +82,7 @@
 @layer base {
   * {
     @apply border-border;
+    scroll-behavior: smooth !important;
   }
   body {
     @apply bg-background text-foreground;
@@ -95,7 +96,7 @@
     height: 2px
   }
   *::-webkit-scrollbar-thumb {
-    background: #999797;
+    background: var(--border);
     border-radius: 0.5rem;
   }
   *::-webkit-scrollbar-thumb:hover {

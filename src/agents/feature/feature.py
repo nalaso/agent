@@ -4,6 +4,7 @@ import time
 from jinja2 import Environment, BaseLoader
 from typing import List, Dict, Union
 
+from src.services.utils import retry_wrapper
 from src.config import Config
 from src.llm import LLM
 from src.state import AgentState
@@ -106,6 +107,7 @@ class Feature:
             "from": "feature"
         })
 
+    @retry_wrapper
     def execute(
         self,
         conversation: list,
@@ -117,10 +119,9 @@ class Feature:
         response = self.llm.inference(prompt, project_name)
         
         valid_response = self.validate_response(response)
-        
-        while not valid_response:
-            print("Invalid response from the model, trying again...")
-            return self.execute(conversation, code_markdown, system_os, project_name)
+
+        if not valid_response:
+            return False
         
         self.emulate_code_writing(valid_response, project_name)
 
