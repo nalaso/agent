@@ -214,7 +214,7 @@
 
       <div
         id="model-dropdown"
-        class="absolute right-0 z-10 mt-2 w-64 origin-top-right bg-secondary rounded-xl shadow-lg max-h-96 overflow-y-auto hidden"
+        class="absolute right-0 z-10 mt-2 w-64 origin-top-right bg-secondary rounded-xl shadow-lg max-h-[80vh] overflow-y-auto hidden"
         role="menu"
         aria-orientation="vertical"
         aria-labelledby="model-button"

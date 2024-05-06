@@ -7,6 +7,7 @@
   import TerminalWidget from "$lib/components/TerminalWidget.svelte";
   import * as Resizable from "$lib/components/ui/resizable/index.js";
   import FooterToolbar from "$lib/components/FooterToolbar.svelte";
+  import { toast } from "svelte-sonner";
 
   import { checkInternetStatus, checkServerStatus } from "$lib/api";
   import { initializeSockets, destroySockets } from "$lib/sockets";

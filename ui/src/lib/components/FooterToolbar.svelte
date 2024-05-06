@@ -1,5 +1,5 @@
 <script>
-    import { agentState, isSending } from "$lib/store";
+    import { agentState, isSending, selectedModel } from "$lib/store";
     import { onMount } from "svelte";
     import Seperator from "./ui/Seperator.svelte";
     import { toast } from "svelte-sonner";
@@ -86,7 +86,6 @@
       </div>
     </div>
   
-    <div></div>
     <!-- left -->
     <div class="flex gap-5 items-center">
       <p>
@@ -100,8 +99,8 @@
       </p>
       <Seperator height={14} />
       <p>
-        Top P:
-        <span class="text-foreground"> 0.4 </span>
+        Model ID:
+        <span class="text-foreground">{$selectedModel}</span>
       </p>
     </div>
   </div>
