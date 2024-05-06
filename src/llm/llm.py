@@ -10,6 +10,8 @@ from .openai_client import OpenAi
 from .gemini_client import Gemini
 from .mistral_client import MistralAi
 from .groq_client import Groq
+from .g4f_client import GPT4FREE
+from g4f.models import _all_models
 
 from src.state import AgentState
 
@@ -30,6 +32,7 @@ class LLM:
         self.log_prompts = config.get_logging_prompts()
         self.timeout_inference = config.get_timeout_inference()
         self.models = {
+            "GPT4FREE": [(model.replace("-"," "), "g4f-" + model) for model in _all_models],
             "CLAUDE": [
                 ("Claude 3 Opus", "claude-3-opus-20240229"),
                 ("Claude 3 Sonnet", "claude-3-sonnet-20240229"),
@@ -95,7 +98,8 @@ class LLM:
             "OPENAI": OpenAi(),
             "GOOGLE": Gemini(),
             "MISTRAL": MistralAi(),
-            "GROQ": Groq()
+            "GROQ": Groq(),
+            "GPT4FREE": GPT4FREE(),
         }
 
         try:
