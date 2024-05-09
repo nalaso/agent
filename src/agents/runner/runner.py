@@ -202,7 +202,6 @@ class Runner:
                         conversation=conversation,
                         code_markdown=code_markdown,
                         commands=commands,
-                        error=command_output,
                         error=command_error,
                         error_context = results,
                         system_os=system_os,
