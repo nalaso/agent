@@ -10,6 +10,7 @@ from .feature import Feature
 from .patcher import Patcher
 from .reporter import Reporter
 from .decision import Decision
+from .issue_solver import GitHubAgent
 
 from src.project import ProjectManager
 from src.state import AgentState
@@ -21,7 +22,7 @@ from src.browser.search import BingSearch, GoogleSearch, DuckDuckGoSearch
 from src.browser import Browser
 from src.browser import start_interaction
 from src.filesystem import ReadCode
-from src.services import Netlify, Git
+from src.services import Netlify, Github
 from src.documenter.pdf import PDF
 
 import json
@@ -34,7 +35,7 @@ from src.socket_instance import emit_agent
 
 
 class Agent:
-    def __init__(self, base_model: str, search_engine: str, browser: Browser = None):
+    def __init__(self, base_model: str, search_engine: str):
         if not base_model:
             raise ValueError("base_model is required")
 
@@ -270,12 +271,12 @@ class Agent:
         elif action == "repo_init":
             project_path = self.project_manager.get_project_path(project_name)
             if self.git == None:
-                self.git = Git(project_path, self.base_model)
+                self.git = Github(project_path, self.base_model)
 
         elif action == "repo_commit":
             project_path = self.project_manager.get_project_path(project_name)
             if self.git == None:
-                self.git = Git(project_path, self.base_model)
+                self.git = Github(project_path, self.base_model)
 
             commit_message = self.git.generate_commit_message(project_name, conversation,code_markdown)
             self.git.commit(commit_message)
@@ -283,7 +284,7 @@ class Agent:
         elif action == "reset_code":
             project_path = self.project_manager.get_project_path(project_name)
             if self.git == None:
-                self.git = Git(project_path, self.base_model)
+                self.git = Github(project_path, self.base_model)
 
             self.git.reset_to_previous_commit()
 
@@ -298,7 +299,7 @@ class Agent:
             print("\n Committing the code\n")
             project_path = self.project_manager.get_project_path(project_name)
             if self.git == None:
-                self.git = Git(project_path, self.base_model)
+                self.git = Github(project_path, self.base_model)
 
             commit_message = self.git.generate_commit_message(project_name, conversation,code_markdown)
             self.git.commit(commit_message)
@@ -399,7 +400,7 @@ class Agent:
         if self.project_manager.get_auto_commit(project_name):
             project_path = self.project_manager.get_project_path(project_name)
             if self.git == None:
-                self.git = Git(project_path, self.base_model)
+                self.git = Github(project_path, self.base_model)
 
             commit_message = self.git.generate_commit_message(project_name, conversation,code_markdown)
             self.git.commit(commit_message)
@@ -410,3 +411,44 @@ class Agent:
             "I have completed the my task. \n"
             "if you would like me to do anything else, please let me know. \n"
         )
+
+    def solve_github_issue(self, prompt: str, project_name: str):
+        if project_name:
+            self.project_manager.add_message_from_user(project_name, prompt)
+
+        self.agent_state.create_state(project=project_name)
+
+        github_repo_url = next((part for part in prompt.split() if 'github.com' in part), None)
+
+        if github_repo_url:
+            repo_url = '/'.join(github_repo_url.split('/')[:5])
+            self.project_manager.add_message_from_devika(project_name, f"Analyzing repo  - {repo_url}")
+        else:
+            self.project_manager.add_message_from_devika(project_name, f"Repo not found.")
+            return
+
+        issue_number = prompt.split(" ")[1].split("/")[-1]
+
+        plan = self.planner.execute(prompt, project_name)
+        print("\nplan :: ", plan, '\n')
+
+        planner_response = self.planner.parse_response(plan)
+        reply = planner_response["reply"]
+        plans = planner_response["plans"]
+
+        self.project_manager.add_message_from_devika(project_name, reply)
+        self.project_manager.add_message_from_devika(project_name, json.dumps(plans, indent=4))
+
+        internal_monologue = self.internal_monologue.execute(current_prompt=plan, project_name=project_name)
+        print("\ninternal_monologue :: ", internal_monologue, '\n')
+
+        new_state = self.agent_state.new_state()
+        new_state["internal_monologue"] = internal_monologue
+        self.agent_state.add_to_current_state(project_name, new_state)
+
+        self.project_manager.add_message_from_devika(project_name, f"Solving issue no - {issue_number}")
+
+        project_path = self.project_manager.get_project_path(project_name)
+        Github.clone(repo_url, project_path)
+        github_agent = GitHubAgent(project_path, base_model=self.base_model)
+        github_agent.solve_github_issue(repo_url, issue_number, project_name)

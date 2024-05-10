@@ -132,6 +132,7 @@ export async function fetchProjectFiles() {
   const projectName = localStorage.getItem("selectedProject");
   const response = await fetch(`${API_BASE_URL}/api/get-project-files?project_name=${projectName}`)
   const data = await response.json();
+  console.log(data)
   return data.files;
 }
 

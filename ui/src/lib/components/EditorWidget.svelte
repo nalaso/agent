@@ -12,6 +12,7 @@
     let sidebarContainer;
 
     const reCreateEditor = async (files) => {
+      console.log(files);
         disposeEditor(editor);
         models = {};
         editor = await initializeEditorRef(monaco, editorContainer)
@@ -60,6 +61,7 @@
 
         projectFiles.subscribe((files) => {
           if (files){
+            console.log(files);
             reCreateEditor(files);
           }
         });
