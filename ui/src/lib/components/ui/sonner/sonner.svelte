@@ -4,8 +4,11 @@
 </script>
 
 <Sonner
+	richColors
+	expand={true}
 	theme={$mode}
-	position="bottom-right"
+	duration={5000}
+	position="bottom-left"
 	class="toaster group"
 	toastOptions={{
 		classes: {
