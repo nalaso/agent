@@ -6,8 +6,8 @@ import {
   messages,
   searchEngineList
 } from "./store";
+import { projectFiles } from "$lib/store";
 import { io } from "socket.io-client";
-
 
 const getApiBaseUrl = () => {
   if (typeof window !== 'undefined') {
@@ -132,7 +132,7 @@ export async function fetchProjectFiles() {
   const projectName = localStorage.getItem("selectedProject");
   const response = await fetch(`${API_BASE_URL}/api/get-project-files?project_name=${projectName}`)
   const data = await response.json();
-  console.log(data)
+  projectFiles.set(data.files);
   return data.files;
 }
 

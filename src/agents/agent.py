@@ -417,12 +417,12 @@ class Agent:
             self.project_manager.add_message_from_user(project_name, prompt)
 
         self.agent_state.create_state(project=project_name)
+        self.agent_state.set_agent_active(project_name, True)
 
         github_repo_url = next((part for part in prompt.split() if 'github.com' in part), None)
 
         if github_repo_url:
             repo_url = '/'.join(github_repo_url.split('/')[:5])
-            self.project_manager.add_message_from_devika(project_name, f"Analyzing repo  - {repo_url}")
         else:
             self.project_manager.add_message_from_devika(project_name, f"Repo not found.")
             return
@@ -446,9 +446,32 @@ class Agent:
         new_state["internal_monologue"] = internal_monologue
         self.agent_state.add_to_current_state(project_name, new_state)
 
-        self.project_manager.add_message_from_devika(project_name, f"Solving issue no - {issue_number}")
-
         project_path = self.project_manager.get_project_path(project_name)
         Github.clone(repo_url, project_path)
-        github_agent = GitHubAgent(project_path, base_model=self.base_model)
+
+        self.project_manager.add_message_from_devika(project_name, "Cloned the repo successfully!")
+        emit_agent("task", {"data": "fetch_files", "project_name": project_name}, False)
+
+        github_agent = GitHubAgent(project_path, base_model=self.base_model, search_engine=self.engine)
         github_agent.solve_github_issue(repo_url, issue_number, project_name)
+
+        conversation = self.project_manager.get_all_messages_formatted(project_name)
+        code_markdown = ReadCode(project_name).code_set_to_markdown()
+
+        if self.git == None:
+            self.git = Github(project_path, self.base_model)
+
+        # TODO implement commit message generation for large file difference
+        # commit_message = self.git.generate_commit_message(project_name, conversation, code_markdown)
+        self.project_manager.add_message_from_devika(project_name, "Committing the changes")
+        self.git.commit(f"solve #{issue_number}")
+
+        new_state = self.agent_state.new_state()
+        new_state["internal_monologue"] = "Pushing the changes to remote."
+        self.agent_state.add_to_current_state(project_name, new_state)
+
+        self.git.push_to_remote()
+        self.project_manager.add_message_from_devika(project_name, "Pushed the changes to remote.")
+
+        self.agent_state.set_agent_active(project_name, False)
+        self.agent_state.set_agent_completed(project_name, True)

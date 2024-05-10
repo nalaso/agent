@@ -3,12 +3,13 @@
   import { projectList, modelList, internet, tokenUsage, agentState, projectFiles, messages, searchEngineList, serverStatus, isSending, selectedProject, selectedModel, selectedSearchEngine} from "$lib/store";
   import { createProject, fetchMessages, fetchInitialData, deleteProject, fetchProjectFiles, fetchAgentState} from "$lib/api";
   import Seperator from "./ui/Seperator.svelte";
+  import { socketListener } from "$lib/sockets";
 
   function selectProject(project) {
     $selectedProject = project;
     fetchMessages();
     fetchAgentState();
-    projectFiles.set(fetchProjectFiles());
+    fetchProjectFiles();
     document.getElementById("project-dropdown").classList.add("hidden");
   }
 
@@ -75,6 +76,18 @@
         await fetchInitialData();
       }
     })();
+
+    socketListener('task', function(msg) {
+        const data = msg['data'];
+        switch (data) {
+          case "fetch_files":
+            fetchProjectFiles();
+            break;
+        
+          default:
+            break;
+        }
+    });
 
     dropdowns.forEach(({ dropdown, button }) => {
       document.getElementById(button).addEventListener("click", function () {

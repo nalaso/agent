@@ -1,21 +1,24 @@
-from src.services import Github
-from src.agents.coder import Coder
+from src.agents.feature import Feature
 from src.agents.patcher import Patcher
 from src.agents.reporter import Reporter
 from src.agents.planner import Planner
 from src.agents.action import Action
 from src.agents.researcher import Researcher
+
 from src.project import ProjectManager
 from src.state import AgentState
-
+from src.services import Github
 from src.filesystem import ReadCode
 
+import platform
+import json
+
 class GitHubAgent:
-    def __init__(self, project_path: str, base_model: str):
+    def __init__(self, project_path: str, base_model: str, search_engine: str):
         self.github = Github(project_path, base_model)
-        self.coder = Coder(base_model=base_model)
+        self.feature = Feature(base_model=base_model, search_engine=search_engine)
         self.action = Action(base_model=base_model)
-        self.patcher = Patcher(base_model=base_model, search_engine="google")
+        self.patcher = Patcher(base_model=base_model, search_engine=search_engine)
         self.reporter = Reporter(base_model=base_model)
         self.planner = Planner(base_model=base_model)
         self.researcher = Researcher(base_model=base_model)
@@ -25,14 +28,26 @@ class GitHubAgent:
 
     def solve_github_issue(self, repo_url: str, issue_number: int, project_name: str):
 
-        # Fetch the issue details
-        issue, issue_title = self.github.get_issue_details(repo_url, issue_number)
+        issue_title, issue_body = self.github.get_issue_details(repo_url, issue_number)
+        issue = issue_title+" -> "+issue_body
 
-        self.project_manager.add_message_from_devika(project_name, f"Issue  - {issue}")
+        self.project_manager.add_message_from_devika(project_name, f"Solving issue #{issue_number} - {issue_title}")
+        self.project_manager.add_message_from_devika(project_name, f"Issue  - {issue_body}")
 
-        # Plan the solution
+        newBranch = issue_title.split(" ")[0]
+        self.github.checkoutToBranch(newBranch)
+
+        self.project_manager.add_message_from_devika(project_name, f"Checkout to branch - {newBranch}")
+
+        os_system = platform.platform()
+
         plan = self.planner.execute(issue, project_name)
         plan_response = self.planner.parse_response(plan)
+        plans = plan_response["plans"]
+        reply = plan_response["reply"]
+
+        self.project_manager.add_message_from_devika(project_name, reply)
+        self.project_manager.add_message_from_devika(project_name, json.dumps(plans, indent=4))
 
         conversation = self.project_manager.get_all_messages_formatted(project_name)
         code_markdown = ReadCode(project_name).code_set_to_markdown()
@@ -42,21 +57,13 @@ class GitHubAgent:
 
         self.project_manager.add_message_from_devika(project_name, response)
 
-        # Research the solution
-        research = self.researcher.execute(plan_response["plans"], [], project_name=project_name)
-        queries = research["queries"]
-        ask_user = research["ask_user"]
-
-        # Implement the solution
-        code = self.coder.execute(
-            step_by_step_plan=plan_response["plans"],
-            user_context=ask_user,
-            search_results={query: self.github.search_code(repo_url, query) for query in queries},
-            project_name=project_name
+        code = self.feature.execute(
+                conversation=conversation,
+                code_markdown=code_markdown,
+                system_os=os_system,
+                project_name=project_name
         )
-        self.coder.save_code_to_project(code, project_name)
+        print("\nfeature code :: ", code, '\n')
+        self.feature.save_code_to_project(code, project_name)
 
-        # Create a pull request
-        self.github.create_pull_request(issue_title)
-
-        return "Pull request created successfully!"
+        self.project_manager.add_message_from_devika(project_name, "Issue solved successfully!")

@@ -19,7 +19,7 @@
 
     function handleMonologueChange(value) {
         if(!value) return;
-        if(value == "Writing code..." || value == "Agent has completed the task."){
+        if(value == "Writing code..." || value == "Agent has completed the task." || value == "Pushing the changes to remote."){
             toast.success(value);
         }
         else if(value && value.includes("error")) {
