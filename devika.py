@@ -82,8 +82,12 @@ def handle_message(data):
 
     state = AgentState.get_latest_state(project_name)
     if not state:
-        thread = Thread(target=lambda: agent.execute(message, project_name))
-        thread.start()
+        if "/solve-issue" in message:
+            thread = Thread(target=lambda: agent.solve_github_issue(message, project_name))
+            thread.start()
+        else:
+            thread = Thread(target=lambda: agent.execute(message, project_name))
+            thread.start()
     else:
         if AgentState.is_agent_completed(project_name):
             thread = Thread(target=lambda: agent.subsequent_execute(message, project_name))

@@ -96,7 +96,7 @@
     -o-appearance: none;
     width: 12px;
     height: 12px;
-    border: 2px solid black;
+    border: 2px solid;
     border-radius: 4px;
   }
 </style>

@@ -1,3 +1,2 @@
-from .git import Git
-from .github import GitHub
+from .github import Github
 from .netlify import Netlify
