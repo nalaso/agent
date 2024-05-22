@@ -12,6 +12,9 @@ import { io } from "socket.io-client";
 const getApiBaseUrl = () => {
   if (typeof window !== 'undefined') {
     const host = window.location.hostname;
+    if(host && host.includes('github')) {
+      return `https://${host.replace('3000','1337')}`
+    }
     if (host === 'localhost' || host === '127.0.0.1') {
       return 'http://127.0.0.1:1337';
     } else {
