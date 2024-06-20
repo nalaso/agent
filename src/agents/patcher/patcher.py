@@ -102,6 +102,7 @@ class Patcher:
             new_state["terminal_session"]["title"] = f"Editing {file}"
             new_state["terminal_session"]["command"] = f"vim {file}"
             new_state["terminal_session"]["output"] = code
+            new_state["subsequent_execute"] = True
             files.append({
                 "file": file,
                 "code": code

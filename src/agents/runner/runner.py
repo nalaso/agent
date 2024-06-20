@@ -123,6 +123,7 @@ class Runner:
             new_state["terminal_session"]["title"] = "Terminal"
             new_state["terminal_session"]["command"] = command
             new_state["terminal_session"]["output"] = command_output
+            new_state["subsequent_execute"] = True
             AgentState().add_to_current_state(project_name, new_state)
             time.sleep(1)
 
@@ -133,6 +134,7 @@ class Runner:
                 new_state["terminal_session"]["title"] = "Terminal"
                 new_state["terminal_session"]["command"] = command
                 new_state["terminal_session"]["output"] = command_output
+                new_state["subsequent_execute"] = True
                 AgentState().add_to_current_state(project_name, new_state)
                 time.sleep(1)
                 #Error analyzer
@@ -186,6 +188,7 @@ class Runner:
                     new_state["terminal_session"]["title"] = "Terminal"
                     new_state["terminal_session"]["command"] = command
                     new_state["terminal_session"]["output"] = command_output
+                    new_state["subsequent_execute"] = True
                     AgentState().add_to_current_state(project_name, new_state)
                     time.sleep(1)
                     
@@ -208,7 +211,7 @@ class Runner:
                         project_name=project_name
                     )
                     
-                    Patcher(base_model=self.base_model).save_code_to_project(code, project_name)
+                    Patcher(base_model=self.base_model, search_engine=self.engine).save_code_to_project(code, project_name)
 
                     Patcher(base_model=self.base_model, search_engine=self.engine).save_code_to_project(code, project_name)
 
@@ -229,6 +232,7 @@ class Runner:
                     new_state["terminal_session"]["title"] = "Terminal"
                     new_state["terminal_session"]["command"] = command
                     new_state["terminal_session"]["output"] = command_output
+                    new_state["subsequent_execute"] = True
                     AgentState().add_to_current_state(project_name, new_state)
                     time.sleep(1)
                     

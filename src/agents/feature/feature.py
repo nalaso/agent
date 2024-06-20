@@ -117,6 +117,7 @@ class Feature:
             new_state["terminal_session"]["title"] = f"Editing {filename}"
             new_state["terminal_session"]["command"] = f"vim {filename}"
             new_state["terminal_session"]["output"] = code
+            new_state["subsequent_execute"] = True
             files.append({
                 "file": filename,
                 "code": code,
@@ -215,6 +216,7 @@ class Feature:
         new_state["terminal_session"]["title"] = "Terminal"
         new_state["terminal_session"]["command"] = """echo "Waiting..." """
         new_state["terminal_session"]["output"] = "Waiting..."
+        new_state["subsequent_execute"] = True
         AgentState().add_to_current_state(project_name, new_state)
         time.sleep(1)
 

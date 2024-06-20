@@ -1,17 +1,19 @@
 from jinja2 import Environment, BaseLoader
 
 from src.llm import LLM
+from src.apis.project import ProjectManager
 
 PROMPT = open("src/agents/planner/prompt.jinja2").read().strip()
 
 class Planner:
     def __init__(self, base_model: str):
         self.llm = LLM(model_id=base_model)
+        self.project_manager = ProjectManager()
 
-    def render(self, prompt: str) -> str:
+    def render(self, prompt: str, conversation: str) -> str:
         env = Environment(loader=BaseLoader())
         template = env.from_string(PROMPT)
-        return template.render(prompt=prompt)
+        return template.render(prompt=prompt, conversation=conversation)
     
     def validate_response(self, response: str) -> bool:
         return True
@@ -66,6 +68,7 @@ class Planner:
         return result    
 
     def execute(self, prompt: str, project_name: str) -> str:
-        prompt = self.render(prompt)
+        conversation = self.project_manager.get_all_messages_formatted(project_name)
+        prompt = self.render(prompt, conversation)
         response = self.llm.inference(prompt, project_name)
         return response

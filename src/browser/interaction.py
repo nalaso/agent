@@ -183,6 +183,7 @@ class Crawler:
 		new_state["internal_monologue"] = "Browsing the web right now..."
 		new_state["browser_session"]["url"] = page_url
 		new_state["browser_session"]["screenshot"] = path_to_save
+		new_state["subsequent_execute"] = True
 		AgentState().add_to_current_state(project_name, new_state)        
 
 		return path_to_save

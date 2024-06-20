@@ -44,7 +44,6 @@ AgentState = AgentState()
 config = Config()
 logger = Logger()
 
-
 # initial socket
 @socketio.on('socket_connect')
 def test_connect(data):
@@ -86,10 +85,23 @@ def handle_message(data):
             thread = Thread(target=lambda: agent.solve_github_issue(message, project_name))
             thread.start()
         else:
-            thread = Thread(target=lambda: agent.execute(message, project_name))
+            if agent.is_chat(message, project_name) == True:
+                thread = Thread(target=lambda: agent.chat(message, project_name))
+            else:
+                thread = Thread(target=lambda: agent.execute(message, project_name))
             thread.start()
     else:
-        if AgentState.is_agent_completed(project_name):
+        not_start_project = agent.is_chat(message, project_name)
+        if "/solve-issue" in message:
+            thread = Thread(target=lambda: agent.solve_github_issue(message, project_name))
+            thread.start()
+        if state["subsequent_execute"] == False and not_start_project == True:
+            thread = Thread(target=lambda: agent.chat(message, project_name))
+            thread.start()
+        elif state["subsequent_execute"] == False:
+            thread = Thread(target=lambda: agent.execute(message, project_name))
+            thread.start()
+        elif state["subsequent_execute"]:
             thread = Thread(target=lambda: agent.subsequent_execute(message, project_name))
             thread.start()
 
