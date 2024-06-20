@@ -118,6 +118,7 @@ class ErrorAnalyzer:
                 new_state["terminal_session"]["title"] = "Terminal"
                 new_state["terminal_session"]["command"] = commands[-1]
                 new_state["terminal_session"]["output"] = command_error
+                new_state["subsequent_execute"] = True
                 AgentState().add_to_current_state(project_name, new_state)
                 time.sleep(1)
 
@@ -148,6 +149,7 @@ class ErrorAnalyzer:
                 new_state["terminal_session"]["title"] = "Terminal"
                 new_state["terminal_session"]["command"] = commands[-1]
                 new_state["terminal_session"]["output"] = error
+                new_state["subsequent_execute"] = True
                 AgentState().add_to_current_state(project_name, new_state)
                 time.sleep(1)
 

@@ -11,7 +11,7 @@ from .patcher import Patcher
 from .reporter import Reporter
 from .decision import Decision
 from .issue_solver import GitHubAgent
-
+from .chatter import Chatter
 from src.project import ProjectManager
 from src.state import AgentState
 from src.logger import Logger
@@ -62,12 +62,32 @@ class Agent:
         self.patcher = Patcher(base_model=base_model, search_engine=search_engine)
         self.reporter = Reporter(base_model=base_model)
         self.decision = Decision(base_model=base_model)
+        self.chatter = Chatter(base_model=base_model)
         self.git = None
 
         self.project_manager = ProjectManager()
         self.agent_state = AgentState()
         self.engine = search_engine
         self.tokenizer = tiktoken.get_encoding("cl100k_base")
+
+    def is_chat(self, prompt: str, project_name: str) -> bool:
+        """
+        Check if the prompt is a chat message
+        """
+        self.agent_state.set_agent_active(project_name, True)
+        return self.chatter.is_chat(prompt, project_name)
+    
+    def chat(self, prompt: str, project_name: str):
+        """
+        Chat with the user
+        """
+        new_message = self.project_manager.new_message()
+        new_message['message'] = prompt
+        new_message['from_devika'] = False
+        self.project_manager.add_message_from_user(project_name, new_message['message'])
+        code_markdown = ""
+        self.chatter.execute(prompt, project_name, code_markdown)
+        self.agent_state.set_agent_active(project_name, False)
 
     async def open_page(self, project_name, url):
         browser = await Browser().start()
@@ -313,6 +333,7 @@ class Agent:
             self.project_manager.add_message_from_user(project_name, prompt)
 
         self.agent_state.create_state(project=project_name)
+        self.agent_state.set_subsequent_execute(project = project_name, subsequent_execute=True)
 
         plan = self.planner.execute(prompt, project_name)
         print("\nplan :: ", plan, '\n')
@@ -337,6 +358,7 @@ class Agent:
 
         new_state = self.agent_state.new_state()
         new_state["internal_monologue"] = internal_monologue
+        new_state["subsequent_execute"] = True
         self.agent_state.add_to_current_state(project_name, new_state)
 
         research = self.researcher.execute(plan, self.collected_context_keywords, project_name=project_name)

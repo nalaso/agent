@@ -41,7 +41,8 @@ class AgentState:
             "completed": False,
             "agent_is_active": True,
             "token_usage": 0,
-            "timestamp": timestamp
+            "timestamp": timestamp,
+            "subsequent_execute": False,
         }
     
     def create_state(self, project: str):
@@ -145,6 +146,29 @@ class AgentState:
                 session.add(agent_state)
                 session.commit()
             emit_agent("agent-state", state_stack)
+
+    def set_subsequent_execute(self, project: str, subsequent_execute: bool):
+        with Session(self.engine) as session:
+            agent_state = session.query(AgentStateModel).filter(AgentStateModel.project == project).first()
+            if agent_state:
+                state_stack = json.loads(agent_state.state_stack_json)
+                state_stack[-1]["subsequent_execute"] = subsequent_execute
+                agent_state.state_stack_json = json.dumps(state_stack)
+                session.commit()
+            else:
+                state_stack = [self.new_state()]
+                state_stack[-1]["subsequent_execute"] = subsequent_execute
+                agent_state = AgentStateModel(project=project, state_stack_json=json.dumps(state_stack))
+                session.add(agent_state)
+                session.commit()
+            emit_agent("agent-state", state_stack)
+                
+    def is_subsequent_execute(self, project: str):
+        with Session(self.engine) as session:
+            agent_state = session.query(AgentStateModel).filter(AgentStateModel.project == project).first()
+            if agent_state:
+                return json.loads(agent_state.state_stack_json)[-1]["subsequent_execute"]
+            return None
 
     def is_agent_completed(self, project: str):
         with Session(self.engine) as session:
