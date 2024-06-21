@@ -4,11 +4,11 @@ import time
 from jinja2 import Environment, BaseLoader
 from typing import List, Dict, Union
 
-from src.services.utils import retry_wrapper
 from src.config import Config
 from src.llm import LLM
 from src.state import AgentState
 from src.logger import Logger
+from src.services.utils import retry_wrapper
 from src.socket_instance import emit_agent
 
 PROMPT = open("src/agents/coder/prompt.jinja2", "r").read().strip()
@@ -52,7 +52,7 @@ class Coder:
             if line.startswith("File: "):
                 if current_file and current_code:
                     result.append({"file": current_file, "code": "\n".join(current_code)})
-                current_file = line.split("`")[1].strip()
+                current_file = line.split(":")[1].strip()
                 current_code = []
                 code_block = False
             elif line.startswith("```"):
@@ -73,10 +73,10 @@ class Coder:
             file_path = os.path.join(self.project_dir, project_name, file['file'])
             file_path_dir = os.path.dirname(file_path)
             os.makedirs(file_path_dir, exist_ok=True)
-
+    
             with open(file_path, "w", encoding="utf-8") as f:
                 f.write(file["code"])
-    
+        
         return file_path_dir
 
     def get_project_path(self, project_name: str):
